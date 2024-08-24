@@ -2,7 +2,7 @@ import json
 import configparser
 import os
 import time
-
+from datetime import datetime
 from openai import OpenAI
 from requests import Session
 from typing import TypeVar, Generator
@@ -11,7 +11,7 @@ import io
 from retry import retry
 from tqdm import tqdm
 
-from arxiv_scraper import get_papers_from_arxiv_rss_api
+from arxiv_scraper import get_papers_from_arxiv_rss_api, get_papers_from_arxiv_api
 from filter_papers import filter_by_author, filter_by_gpt
 from parse_json_to_md import render_md_string
 from push_to_slack import push_to_slack
@@ -159,6 +159,13 @@ def get_papers_from_arxiv(config):
     paper_set = set()
     for area in area_list:
         papers = get_papers_from_arxiv_rss_api(area.strip(), config)
+        if papers == []:
+            print("Could not find RSS feed for " + area)
+            print("This could be due to weekend arvix rss pause")
+            print("Defaulting to arxiv API")
+            last_id = "0.0"
+            timestamp = datetime.strptime("Fri, 23 Aug 2024 04:00:29 +0000", "%a, %d %b %Y %H:%M:%S +0000")
+            papers = get_papers_from_arxiv_api(area, timestamp, last_id)
         paper_set.update(set(papers))
     if config["OUTPUT"].getboolean("debug_messages"):
         print("Number of papers:" + str(len(paper_set)))
