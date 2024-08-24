@@ -145,6 +145,11 @@ if __name__ == "__main__":
     config.read("configs/config.ini")
     paper_list, timestamp, last_id = get_papers_from_arxiv_rss("cs.CL", config)
     print(timestamp)
+    if timestamp is None:
+        # it is None on the Weekends
+        timestamp = datetime.strptime("Fri, 23 Aug 2024 04:00:29 +0000", "%a, %d %b %Y %H:%M:%S +0000")
+        last_id = "0.0"
+        paper_list = []
     api_paper_list = get_papers_from_arxiv_api("cs.CL", timestamp, last_id)
     merged_paper_list = merge_paper_list(paper_list, api_paper_list)
     print([paper.arxiv_id for paper in merged_paper_list])
