@@ -60,7 +60,7 @@ jobs:
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add existing_page.md
+        git add existing_page.md -f
         git commit -m "Update page with new content"
         git push origin gh-pages
     - uses: actions/deploy-pages@v1
