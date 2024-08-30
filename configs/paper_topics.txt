@@ -1,18 +1,17 @@
  1. Studies knowledge distillation methods from a Teacher to a Student model
     - Relevant: Papers that introduce easily employable methods that do not require a completely new architecture, such as new loss functions or training schemes
-    - Not Relevant: Papers that have a student teacher model but it is not the main focus of the paper and they do not develop a novel technique for that task
+    - Not Relevant: Papers that have a student teacher model but it is not the main focus
  2. Studies Uncertainty estimation, Deep evidential uncertainty, Bayesian uncertainty for neural networks
     - Relevant: Any paper that tries to estimate the epistemic and aleatoric uncertainty of neural network predictions.
-    - Not Relevant: Methods which require a lot extra overhead which would make it impractical for inference
- 3. Studies Named Entity Extraction using neural networks and in particular the dataset curation process using active learning and human in the loop
-    - Relevant: Papers which generate training data with LLMS but have a way to either detect errors automatically and direct humans labelers to look at them or have a way to somehow filter out the bad labels.
-    - Not Relevant: Papers which do entity extraction using only human labels
+    - Not Relevant: Methods which require huge overhead which make it impractical for inference
+ 3. Studies Active Learning methods
+    - Relevant: Papers which use active learning for human in the loop labelings
  4. Studies 'scaling laws' in the context of neural networks. Scaling laws refer to the very clear power-law relationship between the size or computational power used to train a model and the performance of that model.
     - Relevant: theoretical or conceptual explanation behind scaling laws for language models.
     - Not relevant: papers that have experiments at different model scales (but do not explicitly fit a scaling law) or papers that mention scaling laws, but the scaling laws are not the central subject of the paper
- 5. Papers that study recommender systems using neural networks and propose new methods to improve these
-    - Relevant: Papers that could allow to improve an existing recommender system, either through data curation, model improvements, training methods etc...
-    - Not Relevant: vague papers that do not provide any reusability such as simply using a pivate dataset and providing any new architecture component that could be reused
+ 5. Studies Recommender systems using neural networks and propose new methods to improve these
+    - Relevant: Papers that can be used for bidding on ads
+    - Not Relevant: Papers lacking code to reproduce
 
  In suggesting papers to your friend, remember that he enjoys papers on statistical machine learning, and generative modeling in natural language processing.
  Your friend also likes learning about surprising empirical results in language models, as well as clever statistical tricks.
