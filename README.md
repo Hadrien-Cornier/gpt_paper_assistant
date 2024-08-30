@@ -1,3 +1,7 @@
+### new features we want
+- read the paper and not just the title 
+- bulk retrieval for first run
+
 # GPT4 paper assistant: A daily ArXiv scanner
 
 This repo implements a very simple daily scanner for Arxiv that uses GPT4 and author matches to find papers you might find interesting. 
