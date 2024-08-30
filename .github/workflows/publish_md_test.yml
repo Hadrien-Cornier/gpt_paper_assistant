@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        ref: gh-pages
+        ref: main
     - name: Download artifact
       id: download-artifact
       uses: dawidd6/action-download-artifact@v2
@@ -45,7 +45,7 @@ jobs:
         else
           echo -e "$DATE\n\n$(cat output.md)" > existing_page.md
         fi
-    - name: Convert output.md to pages
+    - name: Convert existing_page.md to pages
       uses: wranders/markdown-to-pages-action@v0.1
       if: steps.check_files.outputs.files_exists == 'true'
       with:
@@ -62,7 +62,10 @@ jobs:
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         git add existing_page.md -f
         git commit -m "Update page with new content"
-        git push origin gh-pages
+        git push origin main
+    - name: Remove output.md
+      if: steps.check_files.outputs.files_exists == 'true'
+      run: rm output.md
     - uses: actions/deploy-pages@v1
       if: steps.check_files.outputs.files_exists == 'true'
       id: deployment
