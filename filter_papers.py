@@ -160,7 +160,16 @@ def paper_to_titles(paper_entry: Paper) -> str:
 def run_on_batch(
     paper_batch, base_prompt, criterion, postfix_prompt, openai_client, config
 ):
-    batch_str = [paper_to_string(paper) for paper in paper_batch]
+    batch_str = []
+    for paper in paper_batch:
+        abstract, conclusion = get_paper_abstract_and_conclusion(paper.arxiv_id)
+        paper_str = f"ArXiv ID: {paper.arxiv_id}\n"
+        paper_str += f"Title: {paper.title}\n"
+        paper_str += f"Authors: {' and '.join(paper.authors)}\n"
+        paper_str += f"Abstract: {abstract}\n"
+        paper_str += f"Conclusion: {conclusion}\n"
+        batch_str.append(paper_str)
+
     full_prompt = "\n".join(
         [
             base_prompt,
@@ -237,6 +246,35 @@ def filter_by_gpt(
         if config["OUTPUT"].getboolean("debug_messages"):
             print("Total cost: $" + str(all_cost))
 
+# Add this new function to get abstract and conclusion
+def get_paper_abstract_and_conclusion(arxiv_id: str) -> tuple[str, str]:
+    """Fetch the abstract and conclusion of a paper from arXiv."""
+    url = f"https://arxiv.org/abs/{arxiv_id}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Extract abstract
+        abstract_elem = soup.find('blockquote', class_='abstract')
+        abstract = abstract_elem.text.strip() if abstract_elem else ""
+        abstract = re.sub(r'^Abstract:\s*', '', abstract)
+        
+        # Fetch PDF content
+        pdf_url = f"https://arxiv.org/pdf/{arxiv_id}.pdf"
+        pdf_response = requests.get(pdf_url)
+        if pdf_response.status_code == 200:
+            pdf_content = pdf_response.content.decode('utf-8', errors='ignore')
+            
+            # Extract conclusion (this is a simple approach and might need refinement)
+            conclusion_match = re.search(r'(?i)(conclusion|summary).*?(\n\n|\Z)', pdf_content, re.DOTALL)
+            conclusion = conclusion_match.group(0) if conclusion_match else ""
+            conclusion = conclusion[:1000]  # Limit conclusion to 1000 characters
+        else:
+            conclusion = ""
+        
+        return abstract, conclusion
+    else:
+        return "", ""
 
 if __name__ == "__main__":
     config = configparser.ConfigParser()
