@@ -2,7 +2,7 @@ import configparser
 import dataclasses
 import json
 import re
-from typing import List
+from typing import List, Optional
 
 import retry
 from openai import OpenAI
@@ -51,7 +51,11 @@ def filter_papers_by_hindex(all_authors, papers, config):
     return paper_list
 
 
-def calc_price(model, usage):
+def calc_price(model: str, usage: Optional[CompletionUsage]) -> float:
+    if usage is None:
+        return 0.0
+    if model == "chatgpt-4o-latest":
+        return (0.01 * usage.prompt_tokens + 0.03 * usage.completion_tokens) / 1000.0
     if model == "gpt-4-1106-preview":
         return (0.01 * usage.prompt_tokens + 0.03 * usage.completion_tokens) / 1000.0
     if model == "gpt-4":
