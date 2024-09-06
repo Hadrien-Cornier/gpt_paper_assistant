@@ -5,7 +5,11 @@ on:
     # * is a special character in YAML so you have to quote this string
     - cron:  '0 13 * * *'
   workflow_dispatch:
-  
+    inputs:
+      bulk_update:
+        description: 'Perform bulk update'
+        required: false
+        default: 'false'
 
 permissions:
   contents: read
@@ -30,7 +34,11 @@ jobs:
         SLACK_KEY: ${{ secrets.SLACK_KEY }}
         SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
       run: |
-        python main.py
+        if [ "${{ github.event.inputs.bulk_update }}" == "true" ]; then
+          python main.py --bulk_update
+        else
+          python main.py
+        fi
     - name: Upload results
       uses: actions/upload-artifact@v3
       with:

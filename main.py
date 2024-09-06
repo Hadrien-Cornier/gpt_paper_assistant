@@ -7,11 +7,12 @@ from openai import OpenAI
 from requests import Session
 from typing import TypeVar, Generator
 import io
+import argparse
 
 from retry import retry
 from tqdm import tqdm
 
-from arxiv_scraper import get_papers_from_arxiv_rss_api, get_papers_from_arxiv_api
+from arxiv_scraper import get_papers_from_arxiv
 from filter_papers import filter_by_author, filter_by_gpt
 from parse_json_to_md import render_md_string
 from push_to_slack import push_to_slack
@@ -188,6 +189,10 @@ def parse_authors(lines):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run arxiv paper filtering")
+    parser.add_argument('--bulk_update', action='store_true', help='Perform a bulk update looking back 30 days')
+    args = parser.parse_args()
+
     # now load config.ini
     config = configparser.ConfigParser()
     config.read("configs/config.ini")
@@ -204,7 +209,7 @@ if __name__ == "__main__":
         author_names, author_ids = parse_authors(fopen.readlines())
     author_id_set = set(author_ids)
 
-    papers = list(get_papers_from_arxiv(config))
+    papers = list(get_papers_from_arxiv(config, bulk_update=args.bulk_update))
     # dump all papers for debugging
 
     all_authors = set()

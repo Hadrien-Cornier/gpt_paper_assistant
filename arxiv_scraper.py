@@ -36,11 +36,7 @@ def is_earlier(ts1, ts2):
     return int(ts1.replace(".", "")) < int(ts2.replace(".", ""))
 
 
-def get_papers_from_arxiv_api(area: str, timestamp, last_id) -> List[Paper]:
-    # look for papers that are newer than the newest papers in RSS.
-    # we do this by looking at last_id and grabbing everything newer.
-    end_date = timestamp
-    start_date = timestamp - timedelta(days=4)
+def get_papers_from_arxiv_api(area: str, start_date: datetime, end_date: datetime) -> List[Paper]:
     search = arxiv.Search(
         query="("
         + area
@@ -55,19 +51,43 @@ def get_papers_from_arxiv_api(area: str, timestamp, last_id) -> List[Paper]:
     results = list(arxiv.Client().results(search))
     api_papers = []
     for result in results:
-        new_id = result.get_short_id()[:10]
-        if is_earlier(last_id, new_id):
-            authors = [author.name for author in result.authors]
-            summary = result.summary
-            summary = unescape(re.sub("\n", " ", summary))
-            paper = Paper(
-                authors=authors,
-                title=result.title,
-                abstract=summary,
-                arxiv_id=result.get_short_id()[:10],
-            )
-            api_papers.append(paper)
+        authors = [author.name for author in result.authors]
+        summary = result.summary
+        summary = unescape(re.sub("\n", " ", summary))
+        paper = Paper(
+            authors=authors,
+            title=result.title,
+            abstract=summary,
+            arxiv_id=result.get_short_id()[:10],
+        )
+        api_papers.append(paper)
     return api_papers
+
+
+def get_papers_from_arxiv(config, bulk_update=False):
+    area_list = config["FILTERING"]["arxiv_category"].split(",")
+    paper_set = set()
+    end_date = datetime.utcnow()
+    
+    if bulk_update:
+        start_date = end_date - timedelta(days=30)
+        for area in area_list:
+            papers = get_papers_from_arxiv_api(area.strip(), start_date, end_date)
+            paper_set.update(set(papers))
+    else:
+        for area in area_list:
+            papers = get_papers_from_arxiv_rss_api(area.strip(), config)
+            if papers == []:
+                print("Could not find RSS feed for " + area)
+                print("This could be due to weekend arxiv rss pause")
+                print("Defaulting to arxiv API")
+                start_date = end_date - timedelta(days=1)
+                papers = get_papers_from_arxiv_api(area.strip(), start_date, end_date)
+            paper_set.update(set(papers))
+    
+    if config["OUTPUT"].getboolean("debug_messages"):
+        print("Number of papers:" + str(len(paper_set)))
+    return paper_set
 
 
 def get_papers_from_arxiv_rss(area: str, config: Optional[dict]) -> List[Paper]:
@@ -143,16 +163,6 @@ def get_papers_from_arxiv_rss_api(area: str, config: Optional[dict]) -> List[Pap
 if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read("configs/config.ini")
-    paper_list, timestamp, last_id = get_papers_from_arxiv_rss("cs.CL", config)
-    print(timestamp)
-    if timestamp is None:
-        # it is None on the Weekends
-        timestamp = datetime.strptime("Fri, 23 Aug 2024 04:00:29 +0000", "%a, %d %b %Y %H:%M:%S +0000")
-        last_id = "0.0"
-        paper_list = []
-    api_paper_list = get_papers_from_arxiv_api("cs.CL", timestamp, last_id)
-    merged_paper_list = merge_paper_list(paper_list, api_paper_list)
-    print([paper.arxiv_id for paper in merged_paper_list])
+    paper_list = get_papers_from_arxiv(config, bulk_update=True)
     print([paper.arxiv_id for paper in paper_list])
-    print([paper.arxiv_id for paper in api_paper_list])
     print("success")
