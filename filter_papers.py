@@ -6,6 +6,7 @@ from typing import List, Optional
 
 import retry
 from openai import OpenAI
+from openai.types.completion_usage import CompletionUsage
 from tqdm import tqdm
 
 from arxiv_scraper import Paper
