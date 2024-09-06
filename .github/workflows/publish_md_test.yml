@@ -41,7 +41,13 @@ jobs:
         DATE=$(date '+%Y-%m-%d')
         DELIMITER="\n\n---\n\n"
         if [ -f existing_page.md ]; then
-          echo -e "$DATE\n\n$(cat output.md)$DELIMITER$(cat existing_page.md)" > existing_page.md
+          # Check if the content is already in the file
+          if ! grep -q "$DATE" existing_page.md; then
+            echo -e "$DATE\n\n$(cat output.md)$DELIMITER$(cat existing_page.md)" > temp_page.md
+            mv temp_page.md existing_page.md
+          else
+            echo "Content for $DATE already exists. Skipping update."
+          fi
         else
           echo -e "$DATE\n\n$(cat output.md)" > existing_page.md
         fi
@@ -61,8 +67,7 @@ jobs:
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         git add existing_page.md -f
-        git commit -m "Update page with new content"
-        git push origin main
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Update page with new content" && git push origin main)
     - name: Remove output.md
       if: steps.check_files.outputs.files_exists == 'true'
       run: rm output.md
